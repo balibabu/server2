@@ -4,9 +4,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.http import HttpResponse
 from rest_framework import status
-from .serializers import FileViewSerializer,FileSerializer
+from .serializers import FileSerializer
 from .models import File
-from git.extra.config import MAX_GIT_FILE_SIZE
+from git.extra.config import Configurations
 from git.extra.fileManager import FileManager
 from .utility.chunkManager import ChunkManagerForStorage
 
@@ -22,7 +22,7 @@ def uploadFile(request):
     if not file:
         obj=ChunkManagerForStorage(request.data)
         chunkStore[key]=obj
-        return Response({'max-chunk-size':MAX_GIT_FILE_SIZE})
+        return Response({'max-chunk-size':Configurations.MAX_GIT_FILE_SIZE})
     else:
         chunkStore[key].add_chunk(request.data,file)
     

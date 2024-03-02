@@ -1,10 +1,10 @@
 from github import Github
 import base64
-from git.extra.config import GIT_TOKEN
+from git.extra.config import Configurations
 
 class GithubManager:
     def __init__(self,username) -> None:
-        self.git=Github(GIT_TOKEN)
+        self.git=Github(Configurations.GIT_TOKEN)
         self.username=username
 
     def upload_file(self,fileContent,uname,repo): # uname is unique uploaded name

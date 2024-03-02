@@ -1,6 +1,6 @@
 from git.models import RepoSize
 import time
-from .config import MAX_GIT_REPO_SIZE
+from .config import Configurations
 from .githubManager import GithubManager
 
 class RepoSizeManager:
@@ -27,7 +27,7 @@ class RepoSizeManager:
     def get_free_repo():
         repos=RepoSizeManager._get_repos()
         for repo in repos:
-            if RepoSizeManager._get_size(repo)<= MAX_GIT_REPO_SIZE: #400MB
+            if RepoSizeManager._get_size(repo)<= Configurations.MAX_GIT_REPO_SIZE: #400MB
                 return repo
         repo=str(int(time.time()))
         git=GithubManager('dummy')
