@@ -6,5 +6,5 @@ class Photo(models.Model):
     width=models.IntegerField()
     height=models.IntegerField()
     user=models.ForeignKey(User,on_delete=models.CASCADE)
-    original=models.ForeignKey(FileInfo, on_delete=models.CASCADE)
-    thumbnail=models.ForeignKey(FileInfo, on_delete=models.CASCADE)
+    original=models.ForeignKey(FileInfo, on_delete=models.CASCADE, related_name='original')
+    thumbnail=models.ForeignKey(FileInfo, on_delete=models.CASCADE, related_name='thumbnail')
