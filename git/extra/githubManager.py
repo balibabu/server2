@@ -40,5 +40,3 @@ class GithubManager:
                 "branch": 'main'
             }
         )
-    
-    

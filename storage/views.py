@@ -44,7 +44,7 @@ def uploadFile(request):
 @api_view(['DELETE'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
-def deleteFile(request,file_id):
+def deleteFile(request,file_id):  # here if fileInfo is deleted, file will automatically delete
     user = request.user
     file=File.objects.get(id=file_id)
     fm=FileManager(user.username)

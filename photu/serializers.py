@@ -1,14 +1,12 @@
 from rest_framework import serializers
-from .models import Photo, Repo
+from .models import Photo
+from git.serializers import FileInfoSerializer
 
 
 class PhotoSerializer(serializers.ModelSerializer):
+    original = FileInfoSerializer(read_only=True)
+    thumbnail = FileInfoSerializer(read_only=True)
     class Meta:
-        model=Photo
-        fields=['id','oname','uname','size']
-        read_only_fields = ['user']
-        
-class RepoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model=Repo
-        fields='__all__'
+        model = Photo
+        fields = ['id','width','height', 'original', 'thumbnail']
+        read_only_fields = ['user', 'original', 'thumbnail']

@@ -1,16 +1,13 @@
 from rest_framework.decorators import api_view,permission_classes,authentication_classes
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-from .serializers import PhotoSerializer,RepoSerializer
-from .models import Photo, Repo
-from .workings.middleMan import MiddleMan
+from .serializers import PhotoSerializer
+from .models import Photo
 from rest_framework.response import Response
 from django.http import HttpResponse
 from rest_framework import status
-
-
-thumbnails_store={}
-originals_store={}
+from git.extra.fileManager import FileManager
+from .utility.thumbnail import Thumbnail
 
 
 @api_view(['GET'])
@@ -28,84 +25,44 @@ def getPhotos(request):
 @permission_classes([IsAuthenticated])
 def upload(request):
     user=request.user
-    m=MiddleMan(user.username)
-    files = request.FILES.getlist('files')
-    result=[]
-    for file in files:
-        try:
-            uname,repo,fileContent=m.upload_file(file) # this filecontent is un important for logic
-            if repo:
-                photoSerializer=PhotoSerializer(data={'oname':file.name,'uname':uname,'size':file.size})
-                if photoSerializer.is_valid():
-                    photo=photoSerializer.save(user=user)
-                    result.append(photoSerializer.data)
-                    repoSerializer=RepoSerializer(data={'photo':photo.id,'repo':repo})
-                    if repoSerializer.is_valid():
-                        repoSerializer.save()
-                        originals_store[photo.id]=fileContent   # this line is un important for logic
-                    else:
-                        return Response(repoSerializer.errors)
-                else:
-                    return Response(photoSerializer.errors)
-        except Exception as e:
-            print(e)
-    return Response(result)
+    file = request.FILES.get('file')
+    fileContent=file.read()
+    fm=FileManager(user.username)
+    original=fm.upload(fileContent,file.name)
+    img=Thumbnail(fileContent)
+    thumnail=fm.upload(img.thumbnail(),file.name)
+    width,height=img.resolution()
+    serializer=PhotoSerializer(data={'width':width,'height':height})
+    if serializer.is_valid():
+        serializer.save(user=user,original=original,thumnail=thumnail)
+        return Response(serializer.data)
+    else:
+        return Response(serializer.errors)
 
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
-def download(request,id):
+def download(request,id,typ):
     user=request.user
-    photo=Photo.objects.get(id=id,user=user)
-    if photo and id in originals_store: # this is un important for logic
-        content=originals_store[id]   # this is un important for logic
-        print('present in temp variable')
+    photo=Photo.objects.get(id=id)
+    if typ==1:
+        fileInfo=photo.original
     else:
-        print('downloading from git')
-        repo=Repo.objects.get(photo=photo)
-        m=MiddleMan(user.username)
-        content=m.download_file(photo.uname,repo.repo)
-        originals_store[id]=content      # this is un important for logic
-    response = HttpResponse(content, content_type='application/octet-stream')
+        fileInfo=photo.thumbnail
+    fm=FileManager(user.username)
+    file_content=fm.download(fileInfo)
+    response = HttpResponse(file_content, content_type='application/octet-stream')
     return response
-
-
-@api_view(['GET'])
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAuthenticated])
-def getAThumbnail(request,uname):
-    global thumbnails_store
-    user=request.user
-    if uname in thumbnails_store:# this is un important for logic
-        print('thumbnails present in temp variable')
-    else:
-        print('fetching all thumbnails from git')
-        m=MiddleMan(user.username)
-        m.thumbnails(thumbnails_store)
-    response = HttpResponse(thumbnails_store[uname], content_type='application/octet-stream')
-    return response 
-
-
-@api_view(['GET'])
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAuthenticated])
-def getThumbnailsReady(request):
-    global thumbnails_store
-    user=request.user
-    m=MiddleMan(user.username)
-    m.thumbnails(thumbnails_store)
-    return Response('im ready') 
 
 
 @api_view(['DELETE'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
-def deletePhoto(request,id):
+def deletePhoto(request,id): 
     user=request.user
-    m=MiddleMan(user.username)
-    photo=Photo.objects.get(id=id,user=user)
-    repo=Repo.objects.get(photo=photo)
-    m.delete_file(photo.uname,repo.repo,photo.size)
-    photo.delete()
+    photo=Photo.objects.get(id=id)
+    fm=FileManager(user.username)
+    fm.delete(photo.original) # photo cascade w.r.t original/thumbnail
+    fm.delete(photo.thumbnail)
     return Response(status=status.HTTP_204_NO_CONTENT)
