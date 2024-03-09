@@ -28,13 +28,13 @@ def upload(request):
     file = request.FILES.get('file')
     fileContent=file.read()
     fm=FileManager(user.username)
-    original=fm.upload(fileContent,file.name)
+    original=fm.upload([fileContent],file.name)
     img=Thumbnail(fileContent)
-    thumnail=fm.upload(img.thumbnail(),file.name)
+    thumbnail=fm.upload([img.thumbnail()],file.name)
     width,height=img.resolution()
     serializer=PhotoSerializer(data={'width':width,'height':height})
     if serializer.is_valid():
-        serializer.save(user=user,original=original,thumnail=thumnail)
+        serializer.save(user=user,original=original,thumbnail=thumbnail)
         return Response(serializer.data)
     else:
         return Response(serializer.errors)
