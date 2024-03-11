@@ -1,11 +1,10 @@
 from django.db import models
 
-class FileInfo(models.Model):
-    name=models.CharField(max_length=255)
-    size = models.FloatField()
+class FileId(models.Model):
+    pass
 
 class Chunk(models.Model):
-    fileInfo=models.ForeignKey(FileInfo,on_delete=models.CASCADE)
+    fileId=models.ForeignKey(FileId,on_delete=models.CASCADE)
     repo=models.CharField(max_length=12)
     uname=models.CharField(max_length=12)
     size = models.FloatField()

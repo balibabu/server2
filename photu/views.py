@@ -15,7 +15,7 @@ from .utility.thumbnail import Thumbnail
 @permission_classes([IsAuthenticated])
 def getPhotos(request):
     user=request.user
-    photos=Photo.objects.filter(user=user).order_by('id')
+    photos=Photo.objects.filter(user=user).order_by('-id')
     serializer=PhotoSerializer(photos,many=True)
     return Response(serializer.data)
 
@@ -28,11 +28,12 @@ def upload(request):
     file = request.FILES.get('file')
     fileContent=file.read()
     fm=FileManager(user.username)
-    original=fm.upload([fileContent],file.name)
+    compressed=Thumbnail(fileContent,size=(4000,4000))
+    original=fm.upload([compressed.thumbnail()])
     img=Thumbnail(fileContent)
-    thumbnail=fm.upload([img.thumbnail()],file.name)
+    thumbnail=fm.upload([img.thumbnail()])
     width,height=img.resolution()
-    serializer=PhotoSerializer(data={'width':width,'height':height})
+    serializer=PhotoSerializer(data={'title':file.name,'size':len(compressed.thumbnail()),'width':width,'height':height})
     if serializer.is_valid():
         serializer.save(user=user,original=original,thumbnail=thumbnail)
         return Response(serializer.data)
@@ -47,11 +48,11 @@ def download(request,id,typ):
     user=request.user
     photo=Photo.objects.get(id=id)
     if typ==1:
-        fileInfo=photo.original
+        fileId=photo.original
     else:
-        fileInfo=photo.thumbnail
+        fileId=photo.thumbnail
     fm=FileManager(user.username)
-    file_content=fm.download(fileInfo)
+    file_content=fm.download(fileId)
     response = HttpResponse(file_content, content_type='application/octet-stream')
     return response
 

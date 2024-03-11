@@ -30,39 +30,37 @@ def uploadFile(request):
     if obj.is_completed():
         chunks=obj.get_chunks()
         fm=FileManager(user.username)
-        fileInfo=fm.upload(chunks,obj.filename)
-        serializer = FileSerializer(data={'inside':obj.inside})
+        fileId=fm.upload(chunks)
+        serializer = FileSerializer(data={'title':obj.filename,'size':obj.size, 'inside':obj.inside})
         if serializer.is_valid():
-            serializer.save(user=user,fileInfo=fileInfo)
+            serializer.save(user=user,fileId=fileId)
             del chunkStore[key]
             return Response(serializer.data)
         else:
-            fm.delete(fileInfo)
+            fm.delete(fileId)
             return Response(serializer.errors)
     return Response('chunk received')
 
 @api_view(['DELETE'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
-def deleteFile(request,file_id):  # here if fileInfo is deleted, file will automatically delete
+def deleteFile(request,id):  # here if fileId is deleted, file will automatically delete
     user = request.user
-    file=File.objects.get(id=file_id)
+    file=File.objects.get(id=id)
     fm=FileManager(user.username)
-    fm.delete(file.fileInfo)
+    fm.delete(file.fileId)
     return Response(status=status.HTTP_204_NO_CONTENT)
     
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
-def downloadFile(request,file_id):
+def downloadFile(request,id):
     user = request.user
     fm=FileManager(user.username)
-    file=File.objects.get(id=file_id)
-    file_content=fm.download(file.fileInfo)
+    file=File.objects.get(id=id)
+    file_content=fm.download(file.fileId)
     if not file_content: return Response({'error':'something went wrong'},status=400)
     response = HttpResponse(file_content, content_type='application/octet-stream')
-    response['Content-Disposition'] = file.fileInfo.name
-    response['Access-Control-Expose-Headers'] = 'Content-Disposition'
     return response
 
 from rest_framework import generics

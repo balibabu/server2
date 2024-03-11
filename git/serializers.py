@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from .models import FileInfo
+from .models import FileId
 
 class FileInfoSerializer(serializers.ModelSerializer):
     class Meta:
-        model=FileInfo
+        model=FileId
         fields=['name','size']

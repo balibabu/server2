@@ -9,8 +9,7 @@ class FolderSerializer(serializers.ModelSerializer):
         read_only_fields = ['user']
         
 class FileSerializer(serializers.ModelSerializer):
-    file_info = FileInfoSerializer(source='fileInfo', read_only=True)
     class Meta:
         model = File
-        fields = ['id', 'timestamp', 'file_info','inside']
-        read_only_fields = ['user','fileInfo']
+        fields = ['id','title','size', 'timestamp','inside']
+        read_only_fields = ['user', 'fileId']

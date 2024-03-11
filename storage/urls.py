@@ -3,8 +3,8 @@ from . import views,viewsFolder
 
 urlpatterns = [
     path('upload/',views.uploadFile,name='uploadFile'),
-    path('delete/<int:file_id>/',views.deleteFile,name='deleteFile'),
-    path('download/<int:file_id>/',views.downloadFile,name='downloadFile'),
+    path('delete/<int:id>/',views.deleteFile,name='deleteFile'),
+    path('download/<int:id>/',views.downloadFile,name='downloadFile'),
     path('file/<int:pk>/',views.UpdateFileView.as_view(),name='file-update'),
 
     path('filesAndFolders/',viewsFolder.getFilesAndFolders,name='user-info'),

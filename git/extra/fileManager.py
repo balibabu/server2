@@ -1,4 +1,4 @@
-from git.models import FileInfo, Chunk
+from git.models import FileId, Chunk
 from .githubManager import GithubManager
 from .repoSizeManager import RepoSizeManager
 from django.db import transaction
@@ -9,32 +9,28 @@ class FileManager:
     def __init__(self,username) -> None:
         self.git=GithubManager(username)
     
-    def upload(self, chunks, name):
-        fileInfo = None
-        chunk_uname_size = []
-        repo=RepoSizeManager.get_free_repo()
+    def upload(self, chunks):
+        fileId = None
         with transaction.atomic():
-            fileInfo = FileInfo.objects.create(name=name, size=sum(map(len,chunks)))
+            fileId = FileId.objects.create()
             for chunk in chunks:
+                repo=RepoSizeManager.get_free_repo()
                 uname=str(int(time.time()))
                 self.git.upload_file(chunk,uname,repo)
-                chunk_uname_size.append((uname,len(chunk)))
-            
-            for uname,size in chunk_uname_size:
-                Chunk.objects.create(fileInfo=fileInfo,repo=repo,uname=uname,size=size)
-        RepoSizeManager.add_size(repo,fileInfo.size)
-        return fileInfo
+                Chunk.objects.create(fileId=fileId,repo=repo,uname=uname,size=len(chunk))
+                RepoSizeManager.add_size(repo,len(chunk))
+        return fileId
 
-    def delete(self,fileInfo):
-        chunks=Chunk.objects.filter(fileInfo=fileInfo)
+    def delete(self,fileId):
+        chunks=Chunk.objects.filter(fileId=fileId)
         for chunk in chunks:
             self.git.delete_file(chunk.uname,chunk.repo)
             RepoSizeManager.remove_size(chunk.repo, chunk.size)
-        fileInfo.delete()
+        fileId.delete()
 
-    def download(self,fileInfo):
+    def download(self,fileId):
         fileContent=b''
-        chunks=Chunk.objects.filter(fileInfo=fileInfo) #assuming chunks are sorted by id
+        chunks=Chunk.objects.filter(fileId=fileId) #assuming chunks are sorted by id
         for chunk in chunks:
             fileContent+=self.git.download_file(chunk.uname,chunk.repo)
         return fileContent

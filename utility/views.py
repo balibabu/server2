@@ -8,6 +8,26 @@ from django.contrib.auth import logout
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 
+############# testing #################
+from git.models import FileId
+from git.extra.repoSizeManager import RepoSizeManager
+from git.extra.fileManager import FileManager
+from storage.serializers import FileSerializer
+
+@api_view(['GET'])
+def test(request):
+    fm=FileManager('bubu')
+    user=User.objects.get(username='lappy')
+    # fileId=fm.upload([b'hello',b'world'])
+    fileId=FileId.objects.get(id=9)
+    serializer = FileSerializer(data={'title':'file.name','size':'10'})
+    if serializer.is_valid():
+        serializer.save(user=user,fileId=fileId)
+        return Response(serializer.data)
+    else:
+        fm.delete(fileId)
+        return Response(serializer.errors)
+    # return Response(user.username)
 
 ############# clipboard syncronization #################
 clips={}
