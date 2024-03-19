@@ -9,9 +9,13 @@ class Folder(models.Model):
 
 class File(models.Model):
     title = models.CharField(max_length=255)
-    size=models.IntegerField()
+    size=models.CharField(max_length=12)
     timestamp = models.DateTimeField(auto_now_add=True)
-
     inside = models.ForeignKey(Folder, null=True, blank=True, on_delete=models.SET_NULL)
     fileId=models.ForeignKey(FileId,on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+class SharedFile(models.Model):
+    file=models.ForeignKey(File, on_delete=models.CASCADE)
+    sharedWith=models.ForeignKey(User,on_delete=models.CASCADE, null=True)
+    anyoneKey=models.CharField(max_length=32, null=True)

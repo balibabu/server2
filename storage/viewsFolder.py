@@ -3,8 +3,8 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import generics
-from .serializers import FolderSerializer,  FileSerializer
-from .models import Folder, File
+from .serializers import FolderSerializer,  FileSerializer, SharedFileSerializer
+from .models import Folder, File, SharedFile
 
 class FolderListCreateView(generics.ListCreateAPIView):
     serializer_class=FolderSerializer
@@ -26,10 +26,23 @@ class FolderUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
 @permission_classes([IsAuthenticated])
 def getFilesAndFolders(request):
     user = request.user
+
     files=File.objects.filter(user=user).order_by('-timestamp')
-    print(len(files))
     file_serializer=FileSerializer(files,many=True)
 
     folders=Folder.objects.filter(user=user)
     folder_serializer=FolderSerializer(folders,many=True)
-    return Response({'files':file_serializer.data,'folders':folder_serializer.data})
+
+    sharedFilesToMe=SharedFile.objects.filter(sharedWith=user)
+    sharedFilesToMe_serializer=SharedFileSerializer(sharedFilesToMe, many=True)
+
+    sharedFilesByMe=SharedFile.objects.filter(file__user=user)
+    sharedFilesByMe_serializer=SharedFileSerializer(sharedFilesByMe, many=True)
+
+
+    return Response({
+        'files':file_serializer.data,
+        'folders':folder_serializer.data,
+        'sharedToMe':sharedFilesToMe_serializer.data,
+        'sharedByMe':sharedFilesByMe_serializer.data
+        })

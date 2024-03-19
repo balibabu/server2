@@ -32,7 +32,7 @@ def upload(request):
     original=fm.upload([compressed.thumbnail()])
     img=Thumbnail(fileContent)
     thumbnail=fm.upload([img.thumbnail()])
-    width,height=img.resolution()
+    width,height=compressed.resolution()
     serializer=PhotoSerializer(data={'title':file.name,'size':len(compressed.thumbnail()),'width':width,'height':height})
     if serializer.is_valid():
         serializer.save(user=user,original=original,thumbnail=thumbnail)

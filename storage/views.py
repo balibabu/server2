@@ -46,10 +46,13 @@ def uploadFile(request):
 @permission_classes([IsAuthenticated])
 def deleteFile(request,id):  # here if fileId is deleted, file will automatically delete
     user = request.user
-    file=File.objects.get(id=id)
-    fm=FileManager(user.username)
-    fm.delete(file.fileId)
-    return Response(status=status.HTTP_204_NO_CONTENT)
+    file=File.objects.get(id=id,user=user)
+    if file:
+        fm=FileManager(user.username)
+        fm.delete(file.fileId)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    else:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
     
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
